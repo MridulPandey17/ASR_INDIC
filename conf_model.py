@@ -306,10 +306,11 @@ class ConformerBlock(nn.Module):
 
     def forward(self, x, mask=None, p=0):
         x = x + (self.residual_factor * self.ff1(x, p=p))   # added for DUST
-        attention_states = x + self.attention(x, mask=mask, p=p)           # added for DUST
-        x = x + self.conv_block(attention_states, p=p)                     # added for DUST
+        attention_cem = self.attention(x, mask=mask, p=p) #TRIAL FOR CEM
+        x = x + self.attention(x, mask=mask, p=p)           # added for DUST
+        x = x + self.conv_block(x, p=p)                     # added for DUST
         x = x + (self.residual_factor * self.ff2(x, p=p))   # added for DUST
-        return self.layer_norm(x), attention_states
+        return self.layer_norm(x), attention_cem #TRIAL FOR CEM
 
 
 class ConformerEncoder(nn.Module):
@@ -373,9 +374,9 @@ class ConformerEncoder(nn.Module):
         x = F.dropout(x, p=p, training=True)  # added for DUST
 
         for layer in self.layers:
-            x, attention_states = layer(x, mask=mask, p=p)  # added for DUST
+            x, attention_cem = layer(x, mask=mask, p=p)  # added for DUST #TRIAL FOR CEM
 
-        return x, attention_states
+        return x, attention_cem #TRIAL FOR CEM
 
 
 class LSTMDecoder(nn.Module):
@@ -401,6 +402,6 @@ class LSTMDecoder(nn.Module):
 
     def forward(self, x):
         x, _ = self.lstm(x)
-        decoder_states = x
-        logits = self.linear(decoder_states)
-        return logits, decoder_states
+        decoder_cem = x # TRIAL FOR CEM
+        logits = self.linear(x)
+        return logits, decoder_cem
